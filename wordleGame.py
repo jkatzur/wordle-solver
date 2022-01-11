@@ -36,65 +36,68 @@ class wordleGame:
         
         return {"win": win, "turn": self.turn, "response": response}
 
-# Pick a length of game
-while True:
-    try: 
-        n_letters = int(input("What length word Wordle to play? Enter a number 2 through 15.\t"))
-        if 2 <= n_letters <= 15:
-            break
-        else:
-            print("Pick a number 2 to 15")
-    except ValueError:
-        print("Please enter an integer from 2 to 15")
-
-print(f"Input: {n_letters}")
-
-# Play against a randomly word or a human generated starter word?
-while True:
-    random_input = input("Play against a randomly generated word or enter your own. Enter [R]andom or [M]y own.\t").upper()
-    if random_input == 'R':
-        random_word = True
-        break
-    elif random_input == 'M':
-        random_word = False
-        break
-    else:
-        print("Please enter R for Random word or M for My own word")
-
-# If they picked a starter word ask for it
-if not random_word:
+# For when you are running a game via the command line
+if __name__ == '__main__':
+    # Pick a length of game
     while True:
-        starter_word = input("Pick your starter word. Make sure it is {n_letters} characters\t")
-        if len(starter_word) == n_letters:
+        try: 
+            n_letters = int(input("What length word Wordle to play? Enter a number 2 through 15.\t"))
+            if 2 <= n_letters <= 15:
+                break
+            else:
+                print("Pick a number 2 to 15")
+        except ValueError:
+            print("Please enter an integer from 2 to 15")
+
+    print(f"Input: {n_letters}")
+
+    # Play against a randomly word or a human generated starter word?
+    while True:
+        random_input = input("Play against a randomly generated word or enter your own. Enter [R]andom or [M]y own.\t").upper()
+        if random_input == 'R':
+            random_word = True
+            break
+        elif random_input == 'M':
+            random_word = False
             break
         else:
-            print("Try again. Pick a starter word that is {n_letters} characters")
-else:
-    starter_word = ''
+            print("Please enter R for Random word or M for My own word")
 
-# Setup the wordle game
-wordleGame = wordleGame(n_letters=n_letters, random_word=random_word, starter_word=starter_word)
+    # If they picked a starter word ask for it
+    if not random_word:
+        while True:
+            starter_word = input("Pick your starter word. Make sure it is {n_letters} characters\t")
+            if len(starter_word) == n_letters:
+                break
+            else:
+                print("Try again. Pick a starter word that is {n_letters} characters")
+    else:
+        starter_word = ''
 
-game_on = True
-
-# Core game loop
-print(f"\n---- Starting wordle game with {n_letters} letter word ----\n")
-
-while game_on:
+    # Setup the wordle game
+    wordleGame = wordleGame(n_letters=n_letters, random_word=random_word, starter_word=starter_word)
+    game_on = True
     turn = 1
-    # Input guess
-    while True:
-        guess = input(f"Turn {turn}. Input guess: {'' : >5}").lower()
-        if guess.isalnum and len(guess) == n_letters:
-            break
-        else:
-            print("Sorry, try again.")
 
-    response = wordleGame.respond_guess(guess=guess)
+    print(f"\n---- Starting wordle game with {n_letters} letter word ----\n")
     
-    if response['win']:    
-        print(f"\n!!!! That's correct! Game over! You won in {response['turn']} turns! !!!!")
-        game_on = False
-    else:
-        print(f"Response: {response['response'] : >21}\n")
-        turn += 1
+    # Core game loop
+    while game_on:
+        # Input guess
+        while True:
+            guess = input(f"Turn {turn}. Input guess: {'': >5}").lower()
+            if guess.isalnum and len(guess) == n_letters:
+                break
+            elif guess.isalnum and len(guess) != n_letters:
+                print(f"That word is {len(guess)} characters, not {n_letters}. Try again")
+            else:
+                print(f"That word includes a non-alpha character")
+
+        response = wordleGame.respond_guess(guess=guess)
+        
+        if response['win']:    
+            print(f"\n!!!! That's correct! Game over! You won in {response['turn']} turns! !!!!")
+            game_on = False
+        else:
+            print(f"Response: {response['response'] : >{16+n_letters}}\n")
+            turn += 1

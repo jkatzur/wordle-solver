@@ -65,7 +65,7 @@ if __name__ == '__main__':
     # Pick a length of game we're trying to solve
     while True:
         try: 
-            n_letters = int(input("What length wordle game are we trying to solve? Enter a number 2 through 15.\t"))
+            n_letters = int(input("\nWhat length wordle game are we trying to solve? Enter a number 2 through 15.\t"))
             if 2 <= n_letters <= 15:
                 break
             else:
@@ -73,18 +73,16 @@ if __name__ == '__main__':
         except ValueError:
             print("Please enter an integer from 2 to 15")
 
-    print(f"Input: {n_letters}")
-
     # Setup the wordle solver
     wordleSolver = wordleSolver(n_letters = n_letters)
 
     game_on = True
 
     # Core solver loop
-    print(f"To input guesses just type the exact number of characters")
-    print(f"For responses, use + for letters in correct location, - for incorrect and _ for missed")
-    print(f"In wordle the green 'correct' letters are +, the yellow 'incorrect' locations are -, and grey misses are _")
-    print(f"\n---- Starting wordle game with {n_letters} letter word ----\n")
+    print(f"\nFYI - input guesses by just the characters, e.g `query` (no backticks though, just the 5 characters)")
+    print(f"Share response using `+` for correct location, `-` for incorrect, `_` for not in word, e.g `_+__-`")
+    print(f"From the app, green letters are +, yellow - and gray are _")
+    print(f"\n\n---- Starting wordle solver for {n_letters} letter word ----")
 
     turn = 1
     while game_on:
@@ -98,7 +96,7 @@ if __name__ == '__main__':
 
         # Input response you got
         while True:
-            raw_response = input(f"Input the response you got. {'' : >5}").lower()
+            raw_response = input(f"Input the response you got: {'' : >3}").lower()
             if sum([1 for l in raw_response if l in '+-_']) == n_letters:
                 break
             else:
@@ -110,8 +108,21 @@ if __name__ == '__main__':
 
         wordleSolver.process_guess(guess=guess, response=list(raw_response))
 
-        print(f"Top 20 suggested guesses are:")
-        for w in wordleSolver.possible_words[0:20]:
-            print(f"Word: {w[0]}, Freq: {w[1]}")
+        print(f"\nThat response reduces possible matched words to {len(wordleSolver.possible_words)}")
+        print(f"Top guess based on frequency is: {wordleSolver.possible_words[0][0]}")
+
+        # Would you like to see more
+        while True:
+            see_top = input(f"Would you like to see the top 20 possible words? Y(es) or N(o)? {'' : >3}").upper()
+            if see_top == 'Y' or see_top == 'N':
+                break
+            else:
+                print(f"Sorry, try again.")
+
+        if see_top == 'Y':
+            print(f"\nTop 20 suggested guesses are:")
+            for w in wordleSolver.possible_words[0:20]:
+                print(f"Word: {w[0]}, Freq: {w[1]}")
+            print("\n")
 
         turn += 1
