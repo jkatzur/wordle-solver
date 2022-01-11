@@ -86,6 +86,23 @@ if __name__ == '__main__':
 
     turn = 1
     while game_on:
+        print(f"Currently potential matched words is: {len(wordleSolver.possible_words)}")
+        print(f"Top guess based on frequency is: {wordleSolver.possible_words[0][0]}")
+
+        # Would you like to see more
+        while True:
+            see_top = input(f"Would you like to see the top 20 possible words? Y(es) or N(o)? {'' : >3}").upper()
+            if see_top == 'Y' or see_top == 'N':
+                break
+            else:
+                print(f"Sorry, try again.")
+
+        if see_top == 'Y':
+            print(f"\nTop 20 suggested guesses are:")
+            for w in wordleSolver.possible_words[0:20]:
+                print(f"Word: {w[0]}, Freq: {w[1]}")
+            print("\n")
+        
         # Input guess
         while True:
             guess = input(f"Turn {turn}. Input your guess: {'' : >5}").lower()
@@ -107,22 +124,5 @@ if __name__ == '__main__':
             break
 
         wordleSolver.process_guess(guess=guess, response=list(raw_response))
-
-        print(f"\nThat response reduces possible matched words to {len(wordleSolver.possible_words)}")
-        print(f"Top guess based on frequency is: {wordleSolver.possible_words[0][0]}")
-
-        # Would you like to see more
-        while True:
-            see_top = input(f"Would you like to see the top 20 possible words? Y(es) or N(o)? {'' : >3}").upper()
-            if see_top == 'Y' or see_top == 'N':
-                break
-            else:
-                print(f"Sorry, try again.")
-
-        if see_top == 'Y':
-            print(f"\nTop 20 suggested guesses are:")
-            for w in wordleSolver.possible_words[0:20]:
-                print(f"Word: {w[0]}, Freq: {w[1]}")
-            print("\n")
 
         turn += 1
