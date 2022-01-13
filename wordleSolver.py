@@ -19,7 +19,7 @@ class wordleSolver:
         freq_dict = get_frequency_dict('en', wordlist='best')
         n_letter_words = []
         for w in freq_dict.items():
-            if len(w[0]) == self.n_letters and w[0].isalnum(): #removes non-alpha words like don't
+            if len(w[0]) == self.n_letters and w[0].isalpha(): #removes non-alpha words like don't
                 n_letter_words.append(w)
         return n_letter_words
     
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         # Input guess
         while True:
             guess = input(f"Turn {turn}. Input your guess: {'' : >5}").lower()
-            if guess.isalnum and len(guess) == n_letters:
+            if guess.isalpha and len(guess) == n_letters:
                 break
             else:
                 print(f"Sorry, try again.")
