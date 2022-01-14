@@ -17,10 +17,7 @@ class wordleSolver:
         self.letter_scores = {}
         self.letter_scores_weighted = {}
 
-        self.update_letter_scores()
-        self.possible_words['letter_val_score'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], False), axis = 1)
-        self.possible_words['letter_val_score_weighted'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], True), axis = 1)
-        self.possible_words['distinct_letters'] = self.possible_words.apply(lambda row: len(set(row[0])), axis = 1)
+        self.update_state()        
         
     # Return list of all possible words of n_letter length as a dict with wordfreq
     def possible_words(self) -> List[int]:
@@ -47,33 +44,36 @@ class wordleSolver:
                 self.pos_yes[i].add(guess[i])
 
         self.possible_words = self.possible_words[self.possible_words.iloc[:,0:].apply(self.word_in, axis=1)]
+        self.update_state()
+
+    # Package the non-turn based state updates for use during init and as part of turn processing
+    def update_state(self):
         self.update_letter_scores()
+        # Should combine into one scan on the word col
         self.possible_words['letter_val_score'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], False), axis = 1)
         self.possible_words['letter_val_score_weighted'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], True), axis = 1)
         self.possible_words['distinct_letters'] = self.possible_words.apply(lambda row: len(set(row[0])), axis = 1)
+        # Normalize model input columns
+        for col in ['freq', 'letter_val_score', 'letter_val_score_weighted', 'distinct_letters']:
+            self.possible_words[col] = self.possible_words[col] / self.possible_words[col].max()
 
-    # Determines if a given word matches all conditions in current state
-    # This is a naive implementation. Could improve by only evaluating new conditions
-    def word_in(self, w):
-        if 1 in [c in w[0] for c in self.letters_out]:
-            return False
-        # Check if all letters in are there
-        if not sum([c in w[0] for c in self.letters_in])==len(self.letters_in):
-            return False
-        # Check pos_yes
-        for i in range(self.n_letters):
-            if self.pos_no[i] and w[0][i] in self.pos_no[i]:
-                return False
-            if self.pos_yes[i] and w[0][i] not in self.pos_yes[i]:
-                return False
-        return True
-    
-    # Next guess currently just returns the highest frequency next guess
+
     # This is the method that is overridden in more advanced solvers
-    def next_guess(self) -> str:
-        return self.possible_words.iloc[0]['word']
+    def next_guess(self, sort_on:str = 'model_rank', model_params:dict = \
+                    {'freq': 1, 'letter_val_score': 1, 'letter_val_score_weighted': 1, 'distinct_letters': 1}) -> str:
+        
+        self.possible_words['model_rank'] = sum(model_params[weight] * self.possible_words[weight] for weight in model_params.keys())
+        return self.possible_words.sort_values(sort_on, ascending=False).iloc[0]['word']
+
+    # Return top n rows by some method/params. Use same params as guess to evaluate consistently!
+    def top_n_by(self, n:int = 20, sort_on:str = 'model_rank', model_params:dict = \
+                    {'freq': 1, 'letter_val_score': 1, 'letter_val_score_weighted': 1, 'distinct_letters': 1}):
+        
+        self.possible_words['model_rank'] = sum(model_params[weight] * self.possible_words[weight] for weight in model_params.keys())
+        return self.possible_words.sort_values(sort_on, ascending=False).head(n)
 
     
+    # Calculates the per-letter likelihood of each letter in the remaining possible words
     def update_letter_scores(self) -> float:
         words_by_letter = {}
         words_by_letter_weighted = {}
@@ -94,8 +94,7 @@ class wordleSolver:
         self.letter_scores_weighted = dict(sorted(words_by_letter_weighted.items(), key=lambda item:item[1], reverse=True))
         self.letter_scores = dict(sorted(perc_by_letter.items(), key=lambda item:item[1], reverse=True))
 
-    # Determines if a given word matches all conditions in current state
-    # This is a naive implementation. Could improve by only evaluating new conditions
+    # Calculates the letter scores for a specific word based on the current state of self.letter_scores or self.letter_scores_weighted
     def score_word_letter_scores(self, w, weighted=True):
         letter_val_score = 0
         # letter_val_score_weighted = 0
@@ -107,6 +106,21 @@ class wordleSolver:
             # letter_val_score_weighted += self.letter_scores_weighted[l]
 
         return letter_val_score
+
+    # Determines if a given word matches all conditions in current state. Could improve by only evaluating new conditions
+    def word_in(self, w):
+        if 1 in [c in w[0] for c in self.letters_out]:
+            return False
+        # Check if all letters in are there
+        if not sum([c in w[0] for c in self.letters_in])==len(self.letters_in):
+            return False
+        # Check pos_yes
+        for i in range(self.n_letters):
+            if self.pos_no[i] and w[0][i] in self.pos_no[i]:
+                return False
+            if self.pos_yes[i] and w[0][i] not in self.pos_yes[i]:
+                return False
+        return True
 
 
 
@@ -137,7 +151,7 @@ if __name__ == '__main__':
     turn = 1
     while game_on:
         print(f"Currently potential matched words is: {len(wordleSolver.possible_words)}")
-        print(f"Top guess based on frequency is: {wordleSolver.possible_words.iloc[0]['word']}")
+        print(f"Top guess based on our model is: {wordleSolver.next_guess()}")
 
         # Would you like to see more
         while True:
@@ -149,7 +163,7 @@ if __name__ == '__main__':
 
         if see_top == 'Y':
             print(f"\nTop 20 suggested guesses are:")
-            print(wordleSolver.possible_words.head(20))
+            print(wordleSolver.top_n_by(20))
             print("\n")
         
         # Input guess
