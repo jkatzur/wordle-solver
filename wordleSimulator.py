@@ -15,20 +15,24 @@ import time
 # * Further wrap simulator in for loop with various params for each of the above, like a matrix of outcomes
 
 def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn_log:str = None,
-        start_word:str = None,strategy='word_freq'):
+        start_word:str = None, sort_on:str = 'model_rank', model_params:dict = \
+                    {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}):
     
     game_num = 0
     if game_log:
         if not exists(game_log):
             game_log_file = csv.writer(open(game_log, 'w'))
-            game_log_file.writerow(['game_id', 'start_at', 'completed_at', 'strategy', 'n_letters', 'first_guess', 'word', 'turns'])
+            game_log_file.writerow(['game_id', 'start_at', 'completed_at', 'n_letters', 'first_guess', 'sort_on', 'model_params', 'word', 'turns'])
         else:
             game_log_file = csv.writer(open(game_log, 'a'))
 
     if turn_log:
         if not exists(turn_log):
             turn_log_file = csv.writer(open(turn_log, 'w'))
-            turn_log_file.writerow(['game_id', 'turn_number', 'guess', 'words_possible', 'letters_in', 'letters_out', 'pos_yes', 'pos_no', 'response'])
+            turn_log_file.writerow(['game_id', 'turn_number', 'guess', \
+                'words_possible', 'letters_in', 'letters_out', 'pos_yes', 'pos_no', \
+                'freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters', \
+                'model_params', 'model_rank', 'response'])
         else:
             turn_log_file = csv.writer(open(turn_log, 'a'))
 
@@ -38,14 +42,13 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
         wordle_solver = wordleSolver(n_letters)
 
         # Setup logging for game
-        game_attributes = {'start_at': datetime.datetime.now(), 'strategy': strategy, 'n_letters': n_letters}
+        game_attributes = {'start_at': datetime.datetime.now(), 'sort_on': sort_on, 'model_params': 'model_params', 'n_letters': n_letters}
         
         # Create game_id from hash of current_time. Will use this to join game and turnid later
         hash = hashlib.sha1()
         hash.update(str(time.time()).encode('utf-8'))
         game_id = str(game_num) + str(hash.hexdigest()[:12])
         game_attributes['game_id'] = game_id
-        turn_attributes = {'game_id': game_id}
 
         turn = 1
         game_on = True
@@ -62,26 +65,33 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
             response = wordle_game.respond_guess(guess)
 
             if turn_log:
-                turn_attributes['turn_number'] = turn
-                turn_attributes['guess'] = guess
-                turn_attributes['words_possible'] = len(wordle_solver.possible_words)
-                turn_attributes['letters_in'] = list(wordle_solver.letters_in)
-                turn_attributes['letters_out'] = list(wordle_solver.letters_out)
-                turn_attributes['pos_yes'] = [list(pos_yes) for pos_yes in wordle_solver.pos_yes]
-                turn_attributes['pos_no'] = [list(pos_no) for pos_no in wordle_solver.pos_no]
+                word_info = wordle_solver.top_n_by(1).iloc[0]
+                turn_attributes = {'game_id': game_id,
+                    'turn_number': turn,
+                    'guess': guess,
+                    'words_possible': len(wordle_solver.possible_words),
+                    'letters_in': list(wordle_solver.letters_in),
+                    'letters_out': list(wordle_solver.letters_out),
+                    'pos_yes': [list(pos_yes) for pos_yes in wordle_solver.pos_yes],
+                    'pos_no': [list(pos_no) for pos_no in wordle_solver.pos_no]}
+                for c in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters','model_rank']:
+                    turn_attributes[c] = word_info[c]
+                turn_attributes['model_params'] = model_params
                 turn_attributes['response'] = response['response']
-                turn_log_file.writerow([turn_attributes['game_id'], turn_attributes['turn_number'], turn_attributes['guess'],
-                                turn_attributes['words_possible'], turn_attributes['letters_in'], turn_attributes['letters_out'],
-                                turn_attributes['pos_yes'], turn_attributes['pos_no'], turn_attributes['response']])
+                turn_log_file.writerow([turn_attributes[key] for key in ['game_id', 'turn_number', 'guess', \
+                    'words_possible', 'letters_in', 'letters_out', 'pos_yes', 'pos_no', \
+                    'freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters', \
+                    'model_params', 'model_rank', 'response']])
             
             # print(f"Turn: {turn}. Guess: {guess}, Response: {response['response']}")
             
             if response['win']:
                 game_attributes['word'] = guess
                 game_attributes['completed_at'] = datetime.datetime.now()
+                game_attributes['turns'] = turn
                 # print(f"Won in {turn} turns")
                 if game_log:
-                    game_log_file.writerow([game_attributes['game_id'], game_attributes['start_at'], game_attributes['completed_at'], game_attributes['strategy'], game_attributes['n_letters'], game_attributes['first_guess'], game_attributes['word'], turn])
+                    game_log_file.writerow([game_attributes[key] for key in ['game_id', 'start_at', 'completed_at', 'n_letters', 'first_guess', 'sort_on', 'model_params', 'word', 'turns']])
                 game_on = False
             
             wordle_solver.process_guess(guess, response["response"])
@@ -107,4 +117,4 @@ if __name__ == '__main__':
     #     print(f"Working on: {w}...")
     #     run_simulation(n_letters=5, sims=100, log_to='./simulations/freq_only.csv', log_output=True, cl_output=False, start_word=w)
 
-    run_simulation(n_letters=5, sims=10, game_log='./simulations/gamelog_wordfreq.csv', turn_log='./simulations/turnlog_wordfreq.csv', start_word=None, strategy='word_freq')
+    run_simulation(n_letters=5, sims=1, game_log='./simulations/gamelog_model.csv', turn_log='./simulations/turnlog_model.csv', start_word=None)

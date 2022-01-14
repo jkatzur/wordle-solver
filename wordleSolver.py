@@ -14,8 +14,8 @@ class wordleSolver:
         self.pos_no = [set() for _ in range(n_letters)]
         self.guesses = []
         self.possible_words = self.possible_words()
-        self.letter_scores = {}
-        self.letter_scores_weighted = {}
+        self.letter_scores_by_word = {}
+        self.letter_scores_by_freq = {}
 
         self.update_state()        
         
@@ -50,24 +50,24 @@ class wordleSolver:
     def update_state(self):
         self.update_letter_scores()
         # Should combine into one scan on the word col
-        self.possible_words['letter_val_score'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], False), axis = 1)
-        self.possible_words['letter_val_score_weighted'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], True), axis = 1)
+        self.possible_words['letter_score_by_word'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], False), axis = 1)
+        self.possible_words['letter_score_by_freq'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], True), axis = 1)
         self.possible_words['distinct_letters'] = self.possible_words.apply(lambda row: len(set(row[0])), axis = 1)
         # Normalize model input columns
-        for col in ['freq', 'letter_val_score', 'letter_val_score_weighted', 'distinct_letters']:
+        for col in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters']:
             self.possible_words[col] = self.possible_words[col] / self.possible_words[col].max()
 
 
     # This is the method that is overridden in more advanced solvers
     def next_guess(self, sort_on:str = 'model_rank', model_params:dict = \
-                    {'freq': 1, 'letter_val_score': 1, 'letter_val_score_weighted': 1, 'distinct_letters': 1}) -> str:
+                    {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}) -> str:
         
         self.possible_words['model_rank'] = sum(model_params[weight] * self.possible_words[weight] for weight in model_params.keys())
         return self.possible_words.sort_values(sort_on, ascending=False).iloc[0]['word']
 
     # Return top n rows by some method/params. Use same params as guess to evaluate consistently!
     def top_n_by(self, n:int = 20, sort_on:str = 'model_rank', model_params:dict = \
-                    {'freq': 1, 'letter_val_score': 1, 'letter_val_score_weighted': 1, 'distinct_letters': 1}):
+                    {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}):
         
         self.possible_words['model_rank'] = sum(model_params[weight] * self.possible_words[weight] for weight in model_params.keys())
         return self.possible_words.sort_values(sort_on, ascending=False).head(n)
@@ -91,8 +91,8 @@ class wordleSolver:
         for key in words_by_letter.keys():
             perc_by_letter[key] = 1.0 * words_by_letter[key] / sum(words_by_letter.values())
 
-        self.letter_scores_weighted = dict(sorted(words_by_letter_weighted.items(), key=lambda item:item[1], reverse=True))
-        self.letter_scores = dict(sorted(perc_by_letter.items(), key=lambda item:item[1], reverse=True))
+        self.letter_scores_by_freq = dict(sorted(words_by_letter_weighted.items(), key=lambda item:item[1], reverse=True))
+        self.letter_scores_by_word = dict(sorted(perc_by_letter.items(), key=lambda item:item[1], reverse=True))
 
     # Calculates the letter scores for a specific word based on the current state of self.letter_scores or self.letter_scores_weighted
     def score_word_letter_scores(self, w, weighted=True):
@@ -100,9 +100,9 @@ class wordleSolver:
         # letter_val_score_weighted = 0
         for l in set(w):
             if weighted:
-                letter_val_score += self.letter_scores_weighted[l]
+                letter_val_score += self.letter_scores_by_freq[l]
             else:
-                letter_val_score += self.letter_scores[l]
+                letter_val_score += self.letter_scores_by_word[l]
             # letter_val_score_weighted += self.letter_scores_weighted[l]
 
         return letter_val_score
