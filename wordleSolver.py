@@ -13,12 +13,20 @@ class wordleSolver:
         self.pos_yes = [set() for _ in range(n_letters)]
         self.pos_no = [set() for _ in range(n_letters)]
         self.guesses = []
-        self.possible_words = self.possible_words()
+        self.possible_words = self.load_start_words()
         self.letter_scores_by_word = {}
         self.letter_scores_by_freq = {}
 
         self.update_state()        
         
+    def load_start_words(self):
+        try:
+            return pandas.read_pickle(f"./start_words/start_words_{self.n_letters}_letters.pkl")
+        except:
+            pos_words = self.possible_words()
+            pos_words.to_pickle(f"./start_words/start_words_{self.n_letters}_letters.pkl")
+            return pos_words
+
     # Return list of all possible words of n_letter length as a dict with wordfreq
     def possible_words(self) -> List[int]:
         freq_dict = get_frequency_dict('en', wordlist='best')

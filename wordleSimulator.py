@@ -113,8 +113,15 @@ if __name__ == '__main__':
     # 'along','needs','class','close','comes','looks','cause','happy','human','woman','leave','north','watch','light','short',
     # 'taken','third','among','check','heart','asked','child','major','media']
 
-    # for w in next_words_to_test:
-    #     print(f"Working on: {w}...")
-    #     run_simulation(n_letters=5, sims=100, log_to='./simulations/freq_only.csv', log_output=True, cl_output=False, start_word=w)
 
-    run_simulation(n_letters=5, sims=1, game_log='./simulations/gamelog_model.csv', turn_log='./simulations/turnlog_model.csv', start_word=None)
+    # Top words modeled approach
+    top_model_words_to_test = ['their', 'about', 'other', 'after', 'years', 'great', 'those', 'raise', 'there', 'rates',
+            'later', 'arise', 'aires', 'aries', 'arose', 'tears', 'stare', 'artie', 'irate', 'taser', 'aster', 'least',
+            'first', 'oates', 'share', 'heart', 'arnie', 'reina', 'raine', 'einar', 'irena', 'earns', 'snare', 'nears',
+            'arent', 'siena', 'anise', 'eason', 'earth', 'laser', 'learn', 'eatin', 'ariel', 'eaton', 'earls', 'reals', 'arles']
+
+    for w in top_model_words_to_test:
+        print(f"Working on: {w}...")
+        run_simulation(n_letters=5, sims=100, game_log='./simulations/gamelog_model.csv', turn_log='./simulations/turnlog_model.csv', start_word=w)
+
+    # run_simulation(n_letters=5, sims=100, game_log='./simulations/gamelog_model.csv', turn_log='./simulations/turnlog_model.csv', start_word=None)
