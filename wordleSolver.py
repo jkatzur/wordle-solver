@@ -1,6 +1,7 @@
 from typing import List
 import random
 from wordfreq import get_frequency_dict
+import pandas
 
 # Implements wordle solver for wordle puzzle of n_letters
 # This first solver just ranks words by their wordfreq
@@ -13,6 +14,13 @@ class wordleSolver:
         self.pos_no = [set() for _ in range(n_letters)]
         self.guesses = []
         self.possible_words = self.possible_words()
+        self.letter_scores = {}
+        self.letter_scores_weighted = {}
+
+        self.update_letter_scores()
+        self.possible_words['letter_val_score'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], False), axis = 1)
+        self.possible_words['letter_val_score_weighted'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], True), axis = 1)
+        self.possible_words['distinct_letters'] = self.possible_words.apply(lambda row: len(set(row[0])), axis = 1)
         
     # Return list of all possible words of n_letter length as a dict with wordfreq
     def possible_words(self) -> List[int]:
@@ -21,7 +29,9 @@ class wordleSolver:
         for w in freq_dict.items():
             if len(w[0]) == self.n_letters and w[0].isalpha(): #removes non-alpha words like don't
                 n_letter_words.append(w)
-        return n_letter_words
+        df = pandas.DataFrame(n_letter_words)
+        df.columns = ['word', 'freq']
+        return df
     
     # Given a guess and a response this updates state including updating possible_words
     def process_guess(self, guess: str, response: List[int]) -> dict:
@@ -36,7 +46,11 @@ class wordleSolver:
                 self.letters_in.add(guess[i])
                 self.pos_yes[i].add(guess[i])
 
-        self.possible_words = [w for w in self.possible_words if self.word_in(w)]
+        self.possible_words = self.possible_words[self.possible_words.iloc[:,0:].apply(self.word_in, axis=1)]
+        self.update_letter_scores()
+        self.possible_words['letter_val_score'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], False), axis = 1)
+        self.possible_words['letter_val_score_weighted'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], True), axis = 1)
+        self.possible_words['distinct_letters'] = self.possible_words.apply(lambda row: len(set(row[0])), axis = 1)
 
     # Determines if a given word matches all conditions in current state
     # This is a naive implementation. Could improve by only evaluating new conditions
@@ -57,7 +71,43 @@ class wordleSolver:
     # Next guess currently just returns the highest frequency next guess
     # This is the method that is overridden in more advanced solvers
     def next_guess(self) -> str:
-        return self.possible_words[0][0]
+        return self.possible_words.iloc[0]['word']
+
+    
+    def update_letter_scores(self) -> float:
+        words_by_letter = {}
+        words_by_letter_weighted = {}
+        perc_by_letter = {}
+
+        for index, row in self.possible_words.iterrows():
+            for l in set(row[0]):
+                if l in words_by_letter:
+                    if l not in self.letters_in:
+                        words_by_letter[l] += 1
+                        words_by_letter_weighted[l] += row[1]
+                else:
+                    words_by_letter[l] = 1
+                    words_by_letter_weighted[l] = row[1]
+        for key in words_by_letter.keys():
+            perc_by_letter[key] = 1.0 * words_by_letter[key] / sum(words_by_letter.values())
+
+        self.letter_scores_weighted = dict(sorted(words_by_letter_weighted.items(), key=lambda item:item[1], reverse=True))
+        self.letter_scores = dict(sorted(perc_by_letter.items(), key=lambda item:item[1], reverse=True))
+
+    # Determines if a given word matches all conditions in current state
+    # This is a naive implementation. Could improve by only evaluating new conditions
+    def score_word_letter_scores(self, w, weighted=True):
+        letter_val_score = 0
+        # letter_val_score_weighted = 0
+        for l in set(w):
+            if weighted:
+                letter_val_score += self.letter_scores_weighted[l]
+            else:
+                letter_val_score += self.letter_scores[l]
+            # letter_val_score_weighted += self.letter_scores_weighted[l]
+
+        return letter_val_score
+
 
 
 # For when you are running the solver via command line
@@ -87,7 +137,7 @@ if __name__ == '__main__':
     turn = 1
     while game_on:
         print(f"Currently potential matched words is: {len(wordleSolver.possible_words)}")
-        print(f"Top guess based on frequency is: {wordleSolver.possible_words[0][0]}")
+        print(f"Top guess based on frequency is: {wordleSolver.possible_words.iloc[0]['word']}")
 
         # Would you like to see more
         while True:
@@ -99,8 +149,7 @@ if __name__ == '__main__':
 
         if see_top == 'Y':
             print(f"\nTop 20 suggested guesses are:")
-            for w in wordleSolver.possible_words[0:20]:
-                print(f"Word: {w[0]}, Freq: {w[1]}")
+            print(wordleSolver.possible_words.head(20))
             print("\n")
         
         # Input guess
