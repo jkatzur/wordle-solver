@@ -32,6 +32,7 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
             turn_log_file.writerow(['game_id', 'turn_number', 'guess', \
                 'words_possible', 'letters_in', 'letters_out', 'pos_yes', 'pos_no', \
                 'freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters', \
+                'letter_pos_score_by_word', 'letter_pos_score_by_freq', \
                 'model_params', 'model_rank', 'response'])
         else:
             turn_log_file = csv.writer(open(turn_log, 'a'))
@@ -74,13 +75,15 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
                     'letters_out': list(wordle_solver.letters_out),
                     'pos_yes': [list(pos_yes) for pos_yes in wordle_solver.pos_yes],
                     'pos_no': [list(pos_no) for pos_no in wordle_solver.pos_no]}
-                for c in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters','model_rank']:
+                for c in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters','model_rank', \
+                    'letter_pos_score_by_word', 'letter_pos_score_by_freq']:
                     turn_attributes[c] = word_info[c]
                 turn_attributes['model_params'] = model_params
                 turn_attributes['response'] = response['response']
                 turn_log_file.writerow([turn_attributes[key] for key in ['game_id', 'turn_number', 'guess', \
                     'words_possible', 'letters_in', 'letters_out', 'pos_yes', 'pos_no', \
                     'freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters', \
+                    'letter_pos_score_by_word', 'letter_pos_score_by_freq', \
                     'model_params', 'model_rank', 'response']])
             
             # print(f"Turn: {turn}. Guess: {guess}, Response: {response['response']}")
@@ -122,6 +125,6 @@ if __name__ == '__main__':
 
     for w in top_model_words_to_test:
         print(f"Working on: {w}...")
-        run_simulation(n_letters=5, sims=100, game_log='./simulations/gamelog_model.csv', turn_log='./simulations/turnlog_model.csv', start_word=w)
+        run_simulation(n_letters=5, sims=20, game_log='./simulations/gamelog_model_with_perc.csv', turn_log='./simulations/turnlog_model_with_perc.csv', start_word=w)
 
     # run_simulation(n_letters=5, sims=100, game_log='./simulations/gamelog_model.csv', turn_log='./simulations/turnlog_model.csv', start_word=None)

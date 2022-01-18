@@ -66,8 +66,12 @@ class wordleSolver:
         self.possible_words['letter_pos_score_by_freq'] = self.possible_words.apply(lambda row: self.score_word_pos_scores(row[0], True), axis = 1)
         self.possible_words['distinct_letters'] = self.possible_words.apply(lambda row: len(set(row[0])), axis = 1)
         # Normalize model input columns
-        for col in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'letter_pos_score_by_word', 'letter_pos_score_by_freq', 'distinct_letters']:
+        for col in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'letter_pos_score_by_word', 'letter_pos_score_by_freq']:
             self.possible_words[col] = self.possible_words[col] / self.possible_words[col].max()
+        
+        # Normalize distinct letters by punishing non-max more
+        self.possible_words['distinct_letters'] = 1 - (2.0 * (self.possible_words['distinct_letters'].max() - self.possible_words['distinct_letters']) / self.n_letters)
+        self.possible_words['distinct_letters'].clip(0, 1)
 
 
     # This is the method that is overridden in more advanced solvers
