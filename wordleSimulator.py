@@ -42,7 +42,7 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
         wordle_solver = wordleSolver(n_letters)
 
         # Setup logging for game
-        game_attributes = {'start_at': datetime.datetime.now(), 'sort_on': sort_on, 'model_params': 'model_params', 'n_letters': n_letters}
+        game_attributes = {'start_at': datetime.datetime.now(), 'sort_on': sort_on, 'model_params': model_params, 'n_letters': n_letters}
         
         # Create game_id from hash of current_time. Will use this to join game and turnid later
         hash = hashlib.sha1()

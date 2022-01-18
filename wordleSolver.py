@@ -146,7 +146,7 @@ if __name__ == '__main__':
             print("Please enter an integer from 2 to 15")
 
     # Setup the wordle solver
-    wordleSolver = wordleSolver(n_letters = n_letters)
+    wordle_solver = wordleSolver(n_letters = n_letters)
 
     game_on = True
 
@@ -158,8 +158,8 @@ if __name__ == '__main__':
 
     turn = 1
     while game_on:
-        print(f"Currently potential matched words is: {len(wordleSolver.possible_words)}")
-        print(f"Top guess based on our model is: {wordleSolver.next_guess()}")
+        print(f"Currently potential matched words is: {len(wordle_solver.possible_words)}")
+        print(f"Top guess based on our model is: {wordle_solver.next_guess()}")
 
         # Would you like to see more
         while True:
@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
         if see_top == 'Y':
             print(f"\nTop 20 suggested guesses are:")
-            print(wordleSolver.top_n_by(20))
+            print(wordle_solver.top_n_by(n=20, sort_on='model_rank', model_params={'freq':0.2 * turn, 'letter_score_by_word': 0.4/turn, 'letter_score_by_freq': .5/turn, 'distinct_letters': 0.2/turn}))
             print("\n")
         
         # Input guess
@@ -194,6 +194,6 @@ if __name__ == '__main__':
             print(f"Congrats on winning in {turn} turns!")
             break
 
-        wordleSolver.process_guess(guess=guess, response=list(raw_response))
+        wordle_solver.process_guess(guess=guess, response=list(raw_response))
 
         turn += 1
