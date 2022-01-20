@@ -1,2 +1,5 @@
 wordfreq
-pandas 
+pandas
+matplotlib
+seaborn
+numpy
