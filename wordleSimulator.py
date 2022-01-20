@@ -1,6 +1,7 @@
 import csv
 import datetime
 from logging import log
+from random import randint
 import pandas
 from wordleGame import wordleGame
 from wordleSolver import wordleSolver
@@ -16,7 +17,8 @@ import time
 
 def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn_log:str = None,
         start_word:str = None, sort_on:str = 'model_rank', model_params:dict = \
-                    {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}):
+                    {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}, \
+                    same_word: bool = False, random_guess: bool = False):
     
     game_num = 0
     if game_log:
@@ -37,10 +39,19 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
         else:
             turn_log_file = csv.writer(open(turn_log, 'a'))
 
+    if same_word:
+        pick_starter_solver = wordleSolver(n_letters)
+        word = pick_starter_solver.possible_words.iloc[randint(0, 10000)][0]
+
     while game_num < sims:
-        # Create new game and solver
-        wordle_game = wordleGame(n_letters)
+        # Create new solver
         wordle_solver = wordleSolver(n_letters)
+
+        # If repeating word use the solver (ha!) to pick which word, then 
+        if same_word:
+            wordle_game = wordleGame(n_letters=n_letters, random_word=False, starter_word=word)
+        else:
+            wordle_game = wordleGame(n_letters=n_letters)
 
         # Setup logging for game
         game_attributes = {'start_at': datetime.datetime.now(), 'sort_on': sort_on, 'model_params': model_params, 'n_letters': n_letters}
@@ -58,7 +69,10 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
             if turn == 1 and start_word:
                 guess = start_word
             else:
-                guess = wordle_solver.next_guess()
+                if random_guess:
+                    guess = wordle_solver.possible_words.iloc[randint(0, len(wordle_solver.possible_words)-1)][0]
+                else:
+                    guess = wordle_solver.next_guess()
             
             if turn == 1:
                 game_attributes['first_guess'] = guess
@@ -66,7 +80,8 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
             response = wordle_game.respond_guess(guess)
 
             if turn_log:
-                word_info = wordle_solver.top_n_by(1).iloc[0]
+                wordle_solver.top_n_by(1)
+                word_info = wordle_solver.possible_words[wordle_solver.possible_words['word'] == guess]
                 turn_attributes = {'game_id': game_id,
                     'turn_number': turn,
                     'guess': guess,
@@ -77,7 +92,7 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
                     'pos_no': [list(pos_no) for pos_no in wordle_solver.pos_no]}
                 for c in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters','model_rank', \
                     'letter_pos_score_by_word', 'letter_pos_score_by_freq']:
-                    turn_attributes[c] = word_info[c]
+                    turn_attributes[c] = word_info.iloc[0][c]
                 turn_attributes['model_params'] = model_params
                 turn_attributes['response'] = response['response']
                 turn_log_file.writerow([turn_attributes[key] for key in ['game_id', 'turn_number', 'guess', \
@@ -123,8 +138,9 @@ if __name__ == '__main__':
             'first', 'oates', 'share', 'heart', 'arnie', 'reina', 'raine', 'einar', 'irena', 'earns', 'snare', 'nears',
             'arent', 'siena', 'anise', 'eason', 'earth', 'laser', 'learn', 'eatin', 'ariel', 'eaton', 'earls', 'reals', 'arles']
 
-    for w in top_model_words_to_test:
-        print(f"Working on: {w}...")
-        run_simulation(n_letters=5, sims=20, game_log='./simulations/gamelog_model_with_perc.csv', turn_log='./simulations/turnlog_model_with_perc.csv', start_word=w)
+    # for w in top_model_words_to_test:
+    #     print(f"Working on: {w}...")
+    #     run_simulation(n_letters=5, sims=20, game_log='./simulations/gamelog_model_with_perc.csv', turn_log='./simulations/turnlog_model_with_perc.csv', start_word=w)
 
-    # run_simulation(n_letters=5, sims=100, game_log='./simulations/gamelog_model.csv', turn_log='./simulations/turnlog_model.csv', start_word=None)
+    for i in range(1000):
+        run_simulation(n_letters=5, sims=1, same_word=False, random_guess = True, game_log='./simulations/gamelog_random_words_only.csv', turn_log='./simulations/turnlog_random_words_only.csv', start_word=None)
