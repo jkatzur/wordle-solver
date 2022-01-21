@@ -62,11 +62,11 @@ class wordleSolver:
         # Should combine into one scan on the word col
         self.possible_words['letter_score_by_word'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], False), axis = 1)
         self.possible_words['letter_score_by_freq'] = self.possible_words.apply(lambda row: self.score_word_letter_scores(row[0], True), axis = 1)
-        self.possible_words['letter_pos_score_by_word'] = self.possible_words.apply(lambda row: self.score_word_pos_scores(row[0], False), axis = 1)
-        self.possible_words['letter_pos_score_by_freq'] = self.possible_words.apply(lambda row: self.score_word_pos_scores(row[0], True), axis = 1)
+        self.possible_words['letter_score_pos_perc'] = self.possible_words.apply(lambda row: self.score_word_pos_scores(row[0], False), axis = 1)
+        self.possible_words['letter_score_pos_freq'] = self.possible_words.apply(lambda row: self.score_word_pos_scores(row[0], True), axis = 1)
         self.possible_words['distinct_letters'] = self.possible_words.apply(lambda row: len(set(row[0])), axis = 1)
         # Normalize model input columns
-        for col in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'letter_pos_score_by_word', 'letter_pos_score_by_freq']:
+        for col in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'letter_score_pos_perc', 'letter_score_pos_freq']:
             self.possible_words[col] = self.possible_words[col] / self.possible_words[col].max()
         
         # Normalize distinct letters by punishing non-max more
@@ -77,7 +77,7 @@ class wordleSolver:
     # This is the method that is overridden in more advanced solvers
     def next_guess(self, sort_on:str = 'model_rank', model_params:dict = \
                     {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1,
-                    'letter_pos_score_by_word': 1, 'letter_pos_score_by_freq': 1, 'distinct_letters': 1}) -> str:
+                    'letter_score_pos_perc': 1, 'letter_score_pos_freq': 1, 'distinct_letters': 1}) -> str:
         
         self.possible_words['model_rank'] = sum(model_params[weight] * self.possible_words[weight] for weight in model_params.keys())
         return self.possible_words.sort_values(sort_on, ascending=False).iloc[0]['word']
@@ -85,9 +85,10 @@ class wordleSolver:
     # Return top n rows by some method/params. Use same params as guess to evaluate consistently!
     def top_n_by(self, n:int = 20, sort_on:str = 'model_rank', model_params:dict = \
                     {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1,
-                    'letter_pos_score_by_word': 1, 'letter_pos_score_by_freq': 1, 'distinct_letters': 1}):
+                    'letter_score_pos_perc': 1, 'letter_score_pos_freq': 1, 'distinct_letters': 1}):
         
-        self.possible_words['model_rank'] = sum(model_params[weight] * self.possible_words[weight] for weight in model_params.keys())
+        print(model_params)
+        self.possible_words['model_rank'] = sum(model_params[feature] * self.possible_words[feature] for feature in model_params.keys())
         return self.possible_words.sort_values(sort_on, ascending=False).head(n)
 
     
@@ -219,7 +220,7 @@ if __name__ == '__main__':
 
         if see_top == 'Y':
             print(f"\nTop 20 suggested guesses are:")
-            print(wordle_solver.top_n_by(n=20, sort_on='model_rank', model_params={'freq':0.2 * turn, 'letter_score_by_word': 0.4/turn, 'letter_score_by_freq': .5/turn, 'letter_scores_pos_perc': .7/turn, 'letter_scores_pos_freq': 0.7/turn, 'distinct_letters': 0.2/turn}))
+            print(wordle_solver.top_n_by(n=20, sort_on='model_rank', model_params={'freq':0.2 * turn, 'letter_score_by_word': 0.4/turn, 'letter_score_by_freq': .5/turn, 'letter_score_pos_perc': .7/turn, 'letter_score_pos_freq': 0.7/turn, 'distinct_letters': 0.2/turn}))
             print("\n")
         
         # Input guess
