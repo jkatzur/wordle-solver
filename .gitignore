@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Scratch.ipynb
+Puzzle Days for Intuition.ipynb
+.gitignore
+simulations/freq_only.csv
