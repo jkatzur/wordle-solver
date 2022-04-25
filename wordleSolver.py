@@ -52,15 +52,21 @@ class wordleSolver:
     # Given a guess and a response update state including updating possible_words and the various scores
     def process_guess(self, guess: str, response: List[int]) -> dict:
         self.guesses.append({'guess': guess, 'response': response})
-        for i, r in enumerate(response):
+        for pos, r in enumerate(response):
             if r == '_':
-                self.letters_out.add(guess[i])
+                # Make sure we don't incorrectly add a letter as out if the guess has double letter (e.g 'scars')
+                if guess.count(guess[pos]) > 1: # are there double letters
+                    # do any responses indicate the letter is present (but not in that position)
+                    if [response[i] for i, c in enumerate(guess) if c == guess[pos]].count('_') == guess.count(guess[pos]):
+                        self.letters_out.add(guess[pos])    
+                else:
+                    self.letters_out.add(guess[pos])
             elif r == '-':
-                self.letters_in.add(guess[i])
-                self.pos_no[i].add(guess[i])
+                self.letters_in.add(guess[pos])
+                self.pos_no[pos].add(guess[pos])
             elif r == '+':
-                self.letters_in.add(guess[i])
-                self.pos_yes[i].add(guess[i])
+                self.letters_in.add(guess[pos])
+                self.pos_yes[pos].add(guess[pos])
 
         self.possible_words = self.possible_words[self.possible_words.iloc[:,0:].apply(self.word_in, axis=1)]
         # Address case when only 1 possible word... in that case just tell them that 1 word! 
