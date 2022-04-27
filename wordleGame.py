@@ -1,3 +1,8 @@
+# Simple command line wordle game
+# Created the wordleGame class to utilize in simulations
+# Able to play games of any word length
+
+from tkinter import N
 from wordfreq import get_frequency_dict
 import random
 
@@ -5,17 +10,23 @@ class wordleGame:
     def __init__(self, n_letters: int, random_word: bool = True, starter_word: str = ''):
         self.n_letters = n_letters
         self.random_word = random_word
+        self.valid_words = self.create_valid_words(n_letters)
         self.word = self.seed_word(starter_word)
         self.turn = 0
     
+    # Create valid word list for guesses
+    def create_valid_words(self, n_letters):
+        freq_dict = get_frequency_dict('en', wordlist='best')
+        n_letter_words = []
+        for w in freq_dict.items():
+            if len(w[0]) == self.n_letters and w[0].isalpha(): #removes non-alpha words like don't
+                n_letter_words.append(w[0])
+        return n_letter_words
+
+    # Pick starter word
     def seed_word(self, starter_word: str):
         if self.random_word:
-            freq_dict = get_frequency_dict('en', wordlist='best')
-            n_letter_words = []
-            for w in freq_dict.items():
-                if len(w[0]) == self.n_letters and w[0].isalpha(): #removes non-alpha words like don't
-                    n_letter_words.append(w)
-            return n_letter_words[random.randint(0, 10000)][0] # pick one of the 10,000 most common words for this length
+            return self.valid_words[random.randint(0, 10000)] # pick one of the 10,000 most common words for this length
         else:
             return starter_word
 
@@ -87,7 +98,10 @@ if __name__ == '__main__':
         while True:
             guess = input(f"Turn {turn}. Input guess: {'': >5}").lower()
             if guess.isalpha and len(guess) == n_letters:
-                break
+                if guess not in wordleGame.valid_words:
+                    print(f"Not a valid word to guess. Try again.")
+                else:
+                    break
             elif guess.isalpha and len(guess) != n_letters:
                 print(f"That word is {len(guess)} characters, not {n_letters}. Try again")
             else:
