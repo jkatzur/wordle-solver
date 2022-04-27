@@ -91,14 +91,14 @@ def run_simulation(n_letters:int = 5, sims:int = 1000, game_log:str = None, turn
                     'pos_yes': [list(pos_yes) for pos_yes in wordle_solver.pos_yes],
                     'pos_no': [list(pos_no) for pos_no in wordle_solver.pos_no]}
                 for c in ['freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters','model_rank', \
-                    'letter_pos_score_by_word', 'letter_pos_score_by_freq']:
+                    'letter_score_pos_perc', 'letter_score_pos_freq']:
                     turn_attributes[c] = word_info.iloc[0][c]
                 turn_attributes['model_params'] = model_params
                 turn_attributes['response'] = response['response']
                 turn_log_file.writerow([turn_attributes[key] for key in ['game_id', 'turn_number', 'guess', \
                     'words_possible', 'letters_in', 'letters_out', 'pos_yes', 'pos_no', \
                     'freq', 'letter_score_by_word', 'letter_score_by_freq', 'distinct_letters', \
-                    'letter_pos_score_by_word', 'letter_pos_score_by_freq', \
+                    'letter_score_pos_perc', 'letter_score_pos_freq', \
                     'model_params', 'model_rank', 'response']])
             
             # print(f"Turn: {turn}. Guess: {guess}, Response: {response['response']}")
@@ -142,5 +142,5 @@ if __name__ == '__main__':
     #     print(f"Working on: {w}...")
     #     run_simulation(n_letters=5, sims=20, game_log='./simulations/gamelog_model_with_perc.csv', turn_log='./simulations/turnlog_model_with_perc.csv', start_word=w)
 
-    for i in range(1000):
-        run_simulation(n_letters=5, sims=1, same_word=False, random_guess = True, game_log='./simulations/gamelog_random_words_only.csv', turn_log='./simulations/turnlog_random_words_only.csv', start_word=None)
+    for i in range(1):
+        run_simulation(n_letters=5, sims=1000, same_word=False, random_guess = True, game_log='./simulations/gamelog_random_words_only.csv', turn_log='./simulations/turnlog_random_words_only.csv', start_word=None)
