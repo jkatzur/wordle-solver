@@ -1,8 +1,3 @@
-from typing import List
-import random
-from wordfreq import get_frequency_dict
-import pandas
-
 # Implements wordle solver for wordle puzzle of n_letters
 # This initial solver works on 'hard mode' only (only suggests words that are still possible)
 # And ranks guesses by the word frequency and likelihood of the letters + position of letters
@@ -12,6 +7,11 @@ import pandas
 # This can be improved by (1) ranking guesses by entropy (value of guess in reducing universe of potential words)
 # and (2) incorporating prior guesses/results to dynamically improve model weights
 # and (3) using the actual wordle corpus of words. I found it more fun to make it more general
+
+from typing import List
+from wordfreq import get_frequency_dict
+import pandas
+
 class wordleSolver:
     def __init__(self, n_letters: int):
         self.n_letters = n_letters
