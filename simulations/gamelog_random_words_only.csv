@@ -999,3 +999,5 @@ game_id,start_at,completed_at,n_letters,first_guess,sort_on,model_params,word,tu
 033e1e70c0e89,2022-01-19 21:12:52.291974,2022-01-19 21:12:53.154402,5,tarok,model_rank,"{'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}",doled,7
 0e87fc481c4fb,2022-01-19 21:12:57.206584,2022-01-19 21:12:59.718335,5,ology,model_rank,"{'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}",dante,6
 07e880195d879,2022-01-19 21:13:03.781129,2022-01-19 21:13:05.889493,5,tooly,model_rank,"{'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}",fucks,6
+0ba56f6caf327,2022-04-27 12:22:32.714946,2022-04-27 12:22:33.045911,5,parts,model_rank,"{'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}",radar,7
+0ab2f38883063,2022-04-27 12:27:01.131891,2022-04-27 12:27:01.573053,5,trece,model_rank,"{'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1, 'distinct_letters': 1}",hydro,5
