@@ -107,7 +107,6 @@ class wordleSolver:
                     {'freq': 1, 'letter_score_by_word': 1, 'letter_score_by_freq': 1,
                     'letter_score_pos_perc': 1, 'letter_score_pos_freq': 1, 'distinct_letters': 1}):
         
-        print(model_params)
         self.possible_words['model_rank'] = sum(model_params[feature] * self.possible_words[feature] for feature in model_params.keys())
         return self.possible_words.sort_values(sort_on, ascending=False).head(n)
 
